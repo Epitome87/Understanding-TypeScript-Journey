@@ -4,7 +4,7 @@ A Udemy course by Maximilian Schwarzmuller
 
 ## Section 1: Getting Started
 
-### `Originally Started & Completed: 11/19/2021`
+##### `Originally Started & Completed: 11/19/2021`
 
 ### What Is TypeScript & Why Should You Use It?
 
@@ -142,7 +142,7 @@ We create a template project that will serve as a starter for each project in th
 
 ## Section 2: TypeScript Basics & Basic Types
 
-### `Originally Started & Completed: 11/19/2021`
+##### `Originally Started & Completed: 11/19/2021`
 
 ### Module Introduction
 
@@ -559,3 +559,247 @@ Whew! Learned a lot...
 - Look at type aliases, where you can merge complex types into an alias
 - Literal types and union types, which can be useful in scenarios where you expect more than one possible types
 - unknown and never, which are niche types but can be very useful
+
+## Section 3: The TypeScript Compiler (and its Configuration)
+
+##### `Originally Started & Completed: 11/20/2021`
+
+### Module Introduction
+
+### Using Watch Mode
+
+### Compiling the Entire Project Multiple Files
+
+### Including & Excluding Files
+
+### Setting a Compilation Target
+
+### Understanding TypeScript Core Libs
+
+### More Configuration & Compilation Options
+
+### Working with Source Maps
+
+### rootDir and outDir
+
+### Stop Emitting Files on Compilation Errors
+
+### Code Quality Options
+
+### Debugging with VS Code
+
+### Wrap Up
+
+## Section 4: Next-Generation JavaScript & TypeScript
+
+##### `Originally Started & Completed: 11/20/2021`
+
+### Module Introduction
+
+We'll take a look at more modern JavaScript syntax, and how TypeScript handles it.
+
+### let and const
+
+Great reference for JS features, which browsers support them, and which compilers support them: https://kangax.github.io/compat-table/es6/
+
+Added in JavaScript ES6 or more recent are some important features. We will examine a few of them.
+
+- `const` is a variable type which cannot be changed. TypeScript throws an error when we try to make a reassignment to a `const` variable.
+- `let` is a variable which can be changed. It is similar to `var` (which you should not use any more).
+- `let` and `const` have different scopes than `var`
+  - `var` has global and function scope (variables outside of functions available everywhere, those defined in functions only available there)
+  - With `var`, JS doesn't know any other scope besides function and global, so using `var` in an if-statement makes the variable available globally -- not ideal!
+- `let` and `const` introduce the concept of block scope -- always available in the block you define it or lower block. Blocks almost always snippet surrounded by curly braces
+
+### Arrow Functions
+
+Another major feature added in ES6 were _arrow functions_.
+
+```js
+const add = (a, b) => {
+  return a + b;
+};
+```
+
+A benefit of this syntax is it is shorter, since apparently the word _function_ was too long to type. It also has even more concise variations
+
+- If you have just one expression, you can omit the curly braces and remove the return statement (make sure it's all on one line):
+
+```js
+const add = (a, b) => a + b;
+```
+
+If you have a function that only takes one parameter, you can omit the parantheses.
+
+```js
+const printOutput = (output) => console.log(output);
+```
+
+(**NOTE** that if you have _no_ parameters, you _have to_ use an empty pair of parentheses: `() => { ... }`)
+
+However, in TypeScript we need to provide more for the above printOutput to work, as it is not happy we don't specify the type for output:
+
+```js
+const printOutput: (out: number | string) => void = (output) =>
+  console.log(output);
+```
+
+So with that example, the variation syntax isn't really shorter. But an example where it would be:
+
+```js
+const button = document.querySelector('button');
+if (button) {
+  button.addEventListener('click', (event) => console.log(event));
+}
+```
+
+Since TypeScript knows what `addEventListener` will provide to us (event object), TS can infer this, so you don't have to specify the function type anywhere.
+
+### Default Function Parameters
+
+Another nice function feature in modern JS is the ability to assign default arguments to function parameters.
+
+```js
+// Second argument will have its value as 10 if none passed into the call
+const add = (a: number, b: number = 10) => a + b;
+add(1); // Returns 11 (1 + default 10)
+```
+
+**Important** to note that the default arguments must be last in the parameter list. Makes sense; if we skip an argument, it's hard to know which argument we are omitting unless they come last. JS / TS do not look at your function definition and guess which one you are attempting to target or omit.
+
+### The Spread Operator (...)
+
+Arrays and Objects also received useful features in modern JavaScript.
+
+If we want to extract _all_ values of an array:
+
+```js
+const hobbies = ['Coding', 'Gaming'];
+const activeHobbies = ['Hiking'];
+
+// Pass all elements in hobbies array to the activeHobbies array
+activeHobbies.push(...hobbies);
+// Doing this would push the entire array as a SINGLE 3rd element to hobbies
+// activeHobbies.push(hobbies);
+```
+
+(Note that we _can_ push to a constant since arrays are objects, and objects are reference values. When we push we change the memory but not the actual address.)
+
+This `...` syntax, when used in this context, is the _spread operator_. It tells JavaScript to pull out all elements of that array and add them as a list of individual values in the place where the operator was used.
+
+You can also use it when creating a new array:
+
+```js
+const hobbies = ['Coding', 'Gaming'];
+const activeHobbies = ['Hiking', ...hobbies];
+```
+
+The _spread operator_ also exists on Objects.
+
+```js
+const person = {
+  name: 'Matthew',
+  age: 34,
+};
+
+const copiedPerson = { ...person };
+```
+
+This is useful because it creates an actual copy of the object, rather than just telling JavaScript that both variables _point_ to the same position in memory:
+
+```js
+// Valid, but now both point to the same object and changing one will change both. Not always what we want.
+const copiedPerson = person;
+```
+
+The _spread operator_ in this context pulls out all the key/value pairs and they are added to the new object.
+
+### Rest Parameters
+
+Related to the _spread operator_ is the concept of _rest parameters_.
+
+Let's say we want our "add" function to be able to receive as many arguments as we wish. In the place where we expect a list of values (so not where we pass it, but where we want to accept it as incoming values), we can do use the `...` syntax:
+
+```js
+const add = (...numbers: number[]) => {
+  return numbers.reduce((currentResult, currentValue) => {
+    return currentResult + currentValue;
+  }, 0);
+};
+
+add(5, 10, 2, 3); // Valid
+```
+
+Note in the above example we made use of the `reduce` method. It is very useful to know how it works! Overall, it returns a value. As its first argument, it receives a function, of which itself has 2 paramters (the overall result, and the current value). For each item in the array, the function passed into `reduce` will do the logic you specify using the current value and the current result.
+
+Also note that when we call the `add` method, we do not pass an array of numbers! Rather, we are passing a list of individual numbers. Though we could pass an array, by using our new-found knowledge of the _spread operator_!:
+
+```js
+const nums = [5, 10, 2, 3];
+add(...nums); // Passes in each element from the nums array, as a list of individual elements
+```
+
+It's easy to see how the concept of _rest parameters_ is useful for accepting an unlimited amount of arguments. In fact, the `push` method uses _rest params_ to allow a coma-seperated list of items to be pushed.
+
+In TypeScript, we can combine this concept with Tuples! If we know we want to support multiple arguments **but** know how many there will be:
+
+```js
+const add = (...numbers: [number, number, number, number]) => { ... };
+```
+
+Note that in the type definition we stil had to explicitely specify that we want the Tuple to contain 4 numbers. The alternative would have been lengthier:
+
+```js
+const add = (num1: number, num2: number, num3: number, num4: number) => { ... };
+```
+
+### Array & Object Destructuring
+
+Another nice syntax modern JavaScript provides with arrays and objects is **destructuring**.
+
+```js
+const hobbies = ['Coding', 'Gaming', 'Cooking', 'Guitar-ing'];
+const hobby1 = hobbies[0];
+const hobby2 = hobbies[1];
+const hobby3 = hobbies[2];
+const hobby4 = hobbies[3];
+
+// Same as above, but shorter!
+const [hob1, hob2, hob3] = hobbies;
+```
+
+This will go through the hobbies array, store the first element to a constant with "hob1" as name, the second element to "hob2", etc.
+
+We can combine it with _rest params_ even! All remaining elements not specified will be merged together in an array:
+
+```js
+const [hobby1, hobby2, ...remainingHobbies] = hobbies;
+// remaining hobbies is now an array storing "Cooking" and "Guitar-ing"
+```
+
+**Note** that we are not _removing_ these values from the "hobbies" array. We are simply copying them to new variables.
+
+Objects can also be _destructured_:
+
+```js
+const person = { firstName: 'Matthew', age: 34, hobbies: ['Gaming', 'Coding'] };
+const { firstName, hobbies } = person;
+// We now have variables "firstName" and "hobbies", which store the values associated to those properties in our person object
+```
+
+With objects, we are retrieving properties with the exact firstName specified, so the order does not matter like it does with array destructuring.
+
+We can also override the name of the property if we wish to call it something more fitting for our given context:
+
+```js
+const { firstName: userName, age } = person;
+// userName stores "Matthew". firstName does not store anything
+```
+
+Here we are saying find the property called "firstName" from the person object, but set its value to the "userName" variable rather than "firstName". This creates an alias of sorts.
+
+Again, as with arrays, the Object itself is not changed. We are just copying key/values out of it.
+
+### How Code Gets Compiled & Wrap Up
+
+TypeScript not only compiles your code from TypeScript-only features into corresponding, valid JavaScript -- it also compiles modern JavaScript to old, more-supported JavaScript **if** we tell it to do so. This is done by setting the compiler options appropriately, to target "es5" rather than "es6". This makes the compiled JavaScript version of our TypeScript code larger and more complex in order to do workarounds and re-create the ES6 features (rest params, destructuring, arrow functions, spread, etc) for use in ES5.
