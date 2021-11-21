@@ -803,3 +803,350 @@ Again, as with arrays, the Object itself is not changed. We are just copying key
 ### How Code Gets Compiled & Wrap Up
 
 TypeScript not only compiles your code from TypeScript-only features into corresponding, valid JavaScript -- it also compiles modern JavaScript to old, more-supported JavaScript **if** we tell it to do so. This is done by setting the compiler options appropriately, to target "es5" rather than "es6". This makes the compiled JavaScript version of our TypeScript code larger and more complex in order to do workarounds and re-create the ES6 features (rest params, destructuring, arrow functions, spread, etc) for use in ES5.
+
+## Section 5: Classes & Interfaces
+
+##### `Originally Started & Completed: 11/20/2021`
+
+### Module Introduction
+
+In this module, we will dive into classes and interfaces.
+Classes already exist in modern JavaScript. Interfaces are entirely new, though!
+We will expolore what these things are and why we use them. We will explore classes and the concept of inheritance. We will also explore Interfaces
+
+### What Are Classes
+
+What's Object-Oriented Programming (OOP)?
+
+- Work with (real-life) entities in your code. "Objects" that resemble real-life objects.
+- In an online shop, we might have a ProductList object, which has everything we need to manage a ProductList.
+  - Renders a list of products which were fetched from a server.
+  - Might also have an individual Product object, responsible for managing a single product
+    - Renders details about a product and allows addition to cart
+    - Holds rendering + cart-adding logic
+  - Might also have a ShoppingCart object, etc!
+
+Classes & Instances
+
+- Objects:
+  - The concrete things we work with in our code (data structures we use to store data, execute methods on, etc)
+  - An object is said to be an _instance_ of a class if it is based on that class
+  - Class-based creation is an alternative to using object literals
+- Classes:
+  - The _blueprints_ for objects
+  - Define how objects look like, which properties and methods they have
+  - Classes exist to speed up the creation of objects!
+  - Classes make creation of multiple, similar objects much easier
+- This pattern allows us to quickly replicate multiple objects with the same structure / methods based on the same class. They might only differ in the exact data details, like Person objects who share the same behavior but differ in name and age.
+
+### Creating a First Class
+
+- In a way, classes are syntatic sugar for JavaScript's _Constructor functions_
+- Convention to start a class name with an uppercase character
+
+```js
+class Department {
+  // name is a "field" of the class
+  name: string;
+
+  // Function tied to this class, executed when object is being created
+  constructor(n: string) {
+    this.name = n;
+  }
+}
+
+// Creates a new JS object based on the Department blueprint
+const accounting = new Department('Accounting');
+```
+
+### Compiling to JavaScript
+
+If not using the latest version of JavaScript (where the field syntax is supported), we will see the above TypeScript class code compiled into ES6 like:
+
+```js
+'use strict';
+class Department {
+  constructor(n) {
+    this.name = n;
+  }
+}
+```
+
+But if we have TypeScript compile into ES5 code... we see something entirely different (and rather gross!):
+
+```js
+'use strict';
+var Department = (function () {
+  function Department(n) {
+    this.name = n;
+  }
+  return Department;
+})();
+```
+
+This is a _constructor function_, which is vanilla, non-modern JavaScript's way of creating object blueprints. So, the idea of having blueprints for objects has been around a long time in JavaScript, just in a very...very unintuitive way. Classes are the modern, syntax-friendly way to do this.
+
+### Constructor Functions & the "this" Keyword
+
+You can also add methods to Classes / constructor functions! The constructor method is a utility function when you _instantiate_ an object.
+
+```js
+class Department {
+  // name is a "field" of the class
+  name: string;
+
+  // Function tied to this class, executed when object is being created
+  constructor(n: string) {
+    this.name = n;
+  }
+
+  describe() {
+    console.log('Department: ', this.name);
+  }
+}
+
+// Creates a new JS object based on the Department blueprint
+const accounting = new Department('Accounting');
+accounting.describe(); // The "this" in this.name in Department.describe now refers to the accounting object
+```
+
+Note we do not use a colon after the method name; it is not a property of an object, after all!
+
+To refer to a Class property or method from inside of the Class, we have to use the `this` keyword.
+The `this` keyword can be a bit tricky!
+
+```js
+const accountingCopy = { describe: accounting.describe };
+accountingCopy.describe(); // Undefined! "this" is accountingCopy, which has no property called name
+```
+
+In general, we can _typically_ think of `this` as being the thing that is responsible for calling a method. In the above example, accountingCopy called the describe method, and that is an object with no property of name.
+
+In TypeScript, we signal that we want the "this" inside of our describe method to always refer to an instance based on the Department class:
+
+```js
+describe(this: Department) {
+  console.log("Department: ", this.name);
+}
+```
+
+- Now TypeScript would warn us of an error when trying we have our accountingCopy object attempt to call "describe" -- as it should, since accountingCopy is not an instance of Department.
+- TypeScript would also be happy if we also just gave accountingCopy a "name" property: `const accountingCopy = { name: "Accounting", describe: accounting.describe }`. So it would not fuss about it calling "describe", even though we technically did not create it based off a Department class:
+
+### Private and Public Access Modifiers
+
+Classes often get more complex than what we've been seeing so far. If we have a complex Class that uses an array internally to store a list of employees, for example, we would typically provide a method (addEmployee(employeeName)) to facilitate the process of adding an employee to this list. We may then want to prohibit direct access to the employees array that the Class is using.
+
+- We can do so with `private` properties. We simply add the `private` keyword in front of a property or method.
+- This signals that the property / method marked with `private` is only accessible from within the Class itself.
+- This is considered an **access modifier**.
+- There is `private` and `public` (with public being the default).
+
+- In the past, JavaScript had no notion of the public/private -- all properties were always public. But modern JavaScript allows this concept (**not** with the `private` and `public` keyword, though) -- and naturally TypeScript does as well! TypeScript allows this at runtime to check for errors, even if compiling to an older version of JavaScript that does not actually provide functionality for access modifiers.
+
+### Shorthand Initialization
+
+Consider a typical Class with many fields:
+
+```js
+class Department {
+  private id: string;
+  name: string;
+  private employees: string[] = [];
+  private location: string;
+
+  constructor(id: string, n: string, loc: string) {
+    this.id = id;
+    this.name = n;
+    this.location = loc;
+  }
+}
+```
+
+Notice all the duplicate code; we have to declare our fields up top, and if we want them initialized in the constructor we have to pass them as arguments, and then set the field properties to those argument's values. There's a shorthand that can reduce the code needed to be typed:
+
+```js
+class Department {
+  private employees: string[] = []; // We keep as a field; we do not initialize in constructor
+
+  constructor(private id: string, public name: string, private location: string) {
+    // No explicit initialization needed!
+  }
+}
+```
+
+Several things to consider:
+
+- Result: For every argument in the constructor, a property of the same name is created, and the value for the argument is stored in that created property.
+- The argument names **must** be the same as the field names! If we specify an argument called "loc" (short for location), it produced a field with _that_ name.
+- We **must** provide an access modifier (`private` or `public`).
+
+### readonly Properties
+
+Another modifier (but not an _access_ type) is the `readonly` modifier.
+
+- Marks that the property should not change
+- This keyword was introduced by TypeScript. It **does not** exist in JavaScript!
+- Can't write to the property after it is initialized
+- A way to clearly mark that we do not wish for this value to ever be altered
+
+How is readonly different than const?
+
+- They are essentially the same, except readonly is used with class/interface properties, while const is expected to be used with variables.
+- readonly is cehcked only during type-checking (compile time) while const is checked during runtime
+- Declaring a property readonly doesn't mean that its value can't be changed: It means that the property cannot be re-assigned, example:
+
+```js
+interface Person {
+  readonly info: { name: string; age: number };
+}
+
+// Create a new person
+// ...
+
+person.info.age += 1; // This is valid!
+person.info = { name: "Matthew", age: 34 }; // This is invalid!
+```
+
+- Another difference, in regards to Arrays, is you can push / pop / reassign individual elements of an Array when using `const`. But with `readonly`, such operations will produce an error.
+
+### Inheritance
+
+If we have specialized versions of a particular class, it may be useful to _inherit_ from that Class, while extending its properties / functionality.
+
+- In JavaScript, we can do so with the `extends` keyword in the Class declaration:
+
+```js
+class AccountingDepartment extends Department {}
+```
+
+- You can only inherit from one class (unlike some languages, such as C#)
+- The class which is inheriting automatically gets everything the parent class has, including its constructor (if we don't provide our own)
+- But we can add our own constructor, making sure we call `super` in the constructor. It **must** be included, and called like a function:
+
+```js
+class AccountingDepartment extends Department {
+  // public admins: string[]; // Given this due to shorthand syntax
+  constructor(id: string, public admins: string[]) {
+    super(id, 'Accounting');
+  }
+}
+
+const accountingDept = new AccountingDepartment("A1", ["Matthew", "Caitlin"]);
+```
+
+- The call to `super` **must** take arguments of the parent class constructor.
+- You have to call `super` first in the constructor before doing anything involving the `this` keyword!
+
+### Overriding Properties & the Protected Modifier
+
+We can also **override** methods and properties of our base class. We do this simply by defining said methods in our child class. Overriding methods allows us to tweak how a specialized version of the parent class handles certain behavior.
+
+Private properties are only accessible from within the Class they are **defined** -- so not even inherited Classes have access to them. If we want to ensure inherited classes can access something, but not to outside classes, we can use the `protected` keyword:
+
+```js
+class Animal {
+  // This class and its children can access this, but no others
+  protected name: string;
+
+  constructor(n: string) {
+    this.name = n;
+  }
+
+  speak(text: string) {
+    console.log(text);
+  }
+
+  setName(n: string) {
+    this.name = n;
+  }
+}
+
+class Dog extends Animal {
+  constructor(n, public breed: string) {
+    super(n);
+  }
+
+  // Override the Animal.Speak method
+  speak(text: string) {
+    this.bark(text);
+  }
+
+  // Specific to Dog -- Animal does not have this
+  bark(text: string) {
+    console.log(`Woof! My name is ${this.name} and ${text}!`);
+  }
+}
+
+const snake = new Animal('Snakey');
+const dog = new Dog('Leon', 'Chow');
+dog.bark('I GOOD BOI');
+// dog.name; // Not allowed! Name is protected!
+```
+
+- Like the other modifier keywords, `protected` is a TypeScript-only keywords: JavaScript does not know this!
+
+### Getters & Setters
+
+**Getter**
+
+Getters and setters are another useful feature with Classes, and are also available in vanilla JavaScript.
+
+A _getter_ is basically a property where you execute a method when you retrieve a value. Allows you to add more complex logic. They are defined like methods, and require you to return something.
+
+```js
+private lastReport: string;
+
+get mostRecentReport() {
+  if (this.lastReport) return this.lastReport;
+  throw new Error("No report found!");
+}
+
+const lastReport = accountingDepartment.mostRecentReport;
+// const lastReport = accountingDepartment.mostRecentReport(); // NO! Do not treat it as a method!
+```
+
+- A Getter is useful when we want to add logical checks or need to take multiple steps in order to derive the value we wish to return.
+- Useful when working in conjunction with private / protected properties, where we don't want the user to alter the value directly, as we encapulate how the value is handled in our Getter itself.
+- You don't execute it as a method! Just treat it like a normal property, and behind-the-scenes it will execute the method.
+
+** Setter **
+
+Using the `set` keyword, we can define a **setter**
+
+```js
+set mostRecentReport(value: string) {
+  // Logic to set most recent report, e.g.:
+  if (!value) {
+    throw new Error("Please pass in a valid value!");
+  }
+  // ... Etc
+}
+```
+
+Setters and Getters are great for encapsulating logic and for adding extra logic for when you try to read or set a property.
+
+### Static Methods & Properties
+
+Static methods & properties are another useful concept related to properties and methods, which are also available in JS ES6 and later, as well as of course TS!
+
+- Allow you to add properties and methods to Classes which are not accessed on an instance of a class, but rather the class itself
+- Often used for utility functions, or global constants
+- The Math object is an example of this -- we never instantiate an instance of Math to access its properties or methods
+
+We simply add the `static` keyword in front of a property or method:
+
+```js
+static createEmployee(name: string) {
+// Logic,
+employees.push({ name });
+}
+
+Department.createEmployee("Matthew");
+```
+
+- When you `static` on a class, you cannot access them in non-static methods (constructor as well) using the `this` keyword, since those methods are being called on an instance of an object
+- If you want access them inside non-static methods, you would use the `Classname.fieldname` syntax, such as `Department.numEmployees`
+- Cannot mark the constructor as `static`
+
+### Abstract Classes
