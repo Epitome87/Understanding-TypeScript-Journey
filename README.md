@@ -29,7 +29,7 @@ Why TypeScript?
 Example:
 
 ```js
-funciton add(num1, num2) {
+function add(num1, num2) {
     return num1 + num2;
 }
 console.log(add("2, "3"));
@@ -48,7 +48,7 @@ Going back to the same example, since all inputs in JavaScript are strings, rega
 if (typeof num1 === "number" && typeof num2 ==="number") {
     return num1 + num2;
 } else {
-    return +1num + +num2;
+    return +num1 + +num2;
 }
 ```
 
@@ -73,7 +73,7 @@ button.addEventListener('click', function () {
 });
 ```
 
-Here, we explicitely tell TypeScript that we know our inputs are going to return non-null values, and specifically they will be of HTMLInputElement.
+Here, we explicitly tell TypeScript that we know our inputs are going to return non-null values, and specifically they will be of HTMLInputElement.
 We also tell TypeScript that we expect the _add_ method will accept number arguments. Lastly, when we call _add_, TypeScript enforces that the values being passed are of type _number_, so we can parse our inputs into an Int or add "+" in front of them -- both result in conversion to a number.
 
 ### TypeScript Advantages - Overview
@@ -124,7 +124,7 @@ React + TypeScript & NodeJS + TypeScript
 - Advance on your own (to an extent)
 - Debug & search on your own when encountering errors
 
-### Settting Up A Code Editor IDE
+### Setting Up A Code Editor IDE
 
 Visual Studio Code is the preferred IDE!
 
@@ -204,7 +204,7 @@ const result = add(number1, number2, printResult, resultPhrase);
 ### Type Assignments & Type Inference
 
 TypeScript has **type inference** -- does its best to understand which type you have in certain constants / variables. So when we do:
-`const number1 = 5;` we don't have to specify that number1 is a number -- it's inferred! Actually, when we use contant, TypeScript not only infers its type as a number, but specifically "5".
+`const number1 = 5;` we don't have to specify that number1 is a number -- it's inferred! Actually, when we use a constant via the _const_ keyword, TypeScript not only infers its type as a number, but specifically "5".
 
 Although we could do `const number1: number = 5;` it is actually considered bad practice to be so redundant. The only time we may want to do this is if we were not initializing it to a value: `let number1: number;`
 
@@ -229,7 +229,7 @@ const person = {
 ```
 
 Note here is the syntax TS shows as our type for this object (shape, if you will) that an object of type "person" must have to be valid.
-We can tell TypeScript that we do want to work with just a generic object by doign:
+We can tell TypeScript that we do want to work with just a generic object by doing:
 
 ```js
 const person: object = {
@@ -297,13 +297,13 @@ const person: {
 };
 ```
 
-Here, we have to specify that the "role" property is a Tuple. Otherwise TS will assume it's an array that can hold either string or number. To define a tuple, we simply use brackets, and a comma-seperated list of types that represent the data we want in the tuple. These will be the _exact_ order we expect to assign to this property. This tells TypeScript: "I want to have a special array with exactly 2 elements, the first being a number and the second being a string." Any assignments to "role" must conform to this ruleset. So `person.role[1] = 10;` would not work, as we want a string in the 2nd position.
+Here, we have to specify that the "role" property is a Tuple. Otherwise TS will assume it's an array that can hold either string or number. To define a tuple, we simply use brackets, and a comma-separated list of types that represent the data we want in the tuple. These will be the _exact_ order we expect to assign to this property. This tells TypeScript: "I want to have a special array with exactly 2 elements, the first being a number and the second being a string." Any assignments to "role" must conform to this rule-set. So `person.role[1] = 10;` would not work, as we want a string in the 2nd position.
 
 But `person.role.push("admin");` works. Why? We told TS we only want 2 elements.
 
 - Push is an exception, which is allowed in Tuples. Unfortunately TS cannot catch that error.
 
-With Tuples, TypeScript provides us some support regarding the length. We will get errors if we have too few or too many arguments inside our brackets when assigning a value to that Tupe property: `person.role = [0]; // not allowed!` `person.role = [0, "Admin", "user"]; // not allowed!`
+With Tuples, TypeScript provides us some support regarding the length. We will get errors if we have too few or too many arguments inside our brackets when assigning a value to that Tuple property: `person.role = [0]; // not allowed!` `person.role = [0, "Admin", "user"]; // not allowed!`
 
 If you have a scenario where you need exactly _x_ amount of values in an array, and you know the type of each, consider using a Tuple over an Array. You'll get even more strictness into the app!
 
@@ -330,7 +330,7 @@ By default, the first identifier is assigned to the number 0, and each one there
 
 ```js
 enum Role = { ADMIN = 3, READ_ONLY, AUTHOR }; // READ_ONLY is = 4, and AUTHOR is = 5
-enum Role = { ADMIND = 5, READ_ONLY = "READ_ONLY", AUTHOR = 10 };
+enum Role = { ADMIN = 5, READ_ONLY = "READ_ONLY", AUTHOR = 10 };
 ```
 
 Enums are a great construct when you want identifiers that are human-readable and have some mapped value behind the scenes.
@@ -344,7 +344,7 @@ Any
 - Any kind of value. No specific type assignment
 - Really flexible
 - Avoid when possible! It takes away all advantages TypeScript gives you. You're basically just treating a variable as if it were plain JavaScript
-- Instead, either explicitely set it to a type or let TS use its powerful inference
+- Instead, either explicitly set it to a type or let TS use its powerful inference
 - Can use as a fallback when you have data that you _really_ can't know what type it may be (but provide some runtime type checking)
 
 ### Union Types
@@ -362,7 +362,7 @@ const combinedAges = combine(30, 26);
 const combinedNames = combine('Matthew', 'Caitlin');
 ```
 
-**IMPORTANT** to note that TypeScript will give us an error: `Operator '+' cannot be applied to types 'string | number' and 'string | number'` But this is not actually correct! This should work -- we _can_ concatanate strings with numbers. But TypeScript only sees that we have a Union type, and doesn't actually analyze what's in the union type. It thinks: "Okay, you're expecting multiple types. Maybe that includes types where we cannot use the "+" operator, so I will complain!"
+**IMPORTANT** to note that TypeScript will give us an error: `Operator '+' cannot be applied to types 'string | number' and 'string | number'` But this is not actually correct! This should work -- we _can_ concatenate strings with numbers. But TypeScript only sees that we have a Union type, and doesn't actually analyze what's in the union type. It thinks: "Okay, you're expecting multiple types. Maybe that includes types where we cannot use the "+" operator, so I will complain!"
 
 We can work around this issue by adding runtime type checking:
 
@@ -390,11 +390,7 @@ Literal Types
 Example usage:
 
 ```js
-function add(
-  num1: number,
-  num2: number,
-  resultType: 'round-up' | 'round-down'
-) {
+function add(num1: number, num2: number, resultType: 'round-up' | 'round-down') {
   if (resultType === 'round-up') {
     return Math.ceiling(num1 + num2);
   } else {
@@ -425,7 +421,7 @@ This allows us to be more concise and descriptive.
 
 ### Function Return Types & void
 
-TypeScript is very good at inferring what our return type is from a function. But we can explicitely state it as well. To do so, we simply put a colon after the parameter list, followed by the type we wish to be returned by the function:
+TypeScript is very good at inferring what our return type is from a function. But we can explicitly state it as well. To do so, we simply put a colon after the parameter list, followed by the type we wish to be returned by the function:
 
 ```js
 function add(n1: number, n2: number): string {
@@ -446,7 +442,7 @@ The void Return Type
   - For this scenario, the only valid use of `undefined` in a return type is when we are simply returning, with no value: `return;`
   - We can also use the `void` return type in a function that simply returns `return;` aas well.
 
-TLDR: Probably use `void` in all scenarios where a function does not return a value.
+**Summary**: Probably use `void` in all scenarios where a function does not return a value.
 
 ### Functions as Types
 
@@ -538,7 +534,7 @@ function generateError(message: string, code: number): never {
   throw { message: message, errorCode: code };
 }
 
-console.log(generateError('An error occured!', 500)); // Nothing is printed
+console.log(generateError('An error occurred!', 500)); // Nothing is printed
 ```
 
 Although we could get by without specifying any return type in the previous function, or put `void` as the return type (which is also the inferred type TypeScript will assume anyways), it is best to specify `never` to be really clear about the functions behavior.
@@ -629,7 +625,7 @@ A benefit of this syntax is it is shorter, since apparently the word _function_ 
 const add = (a, b) => a + b;
 ```
 
-If you have a function that only takes one parameter, you can omit the parantheses.
+If you have a function that only takes one parameter, you can omit the parentheses.
 
 ```js
 const printOutput = (output) => console.log(output);
@@ -640,8 +636,7 @@ const printOutput = (output) => console.log(output);
 However, in TypeScript we need to provide more for the above printOutput to work, as it is not happy we don't specify the type for output:
 
 ```js
-const printOutput: (out: number | string) => void = (output) =>
-  console.log(output);
+const printOutput: (out: number | string) => void = (output) => console.log(output);
 ```
 
 So with that example, the variation syntax isn't really shorter. But an example where it would be:
@@ -730,7 +725,7 @@ const add = (...numbers: number[]) => {
 add(5, 10, 2, 3); // Valid
 ```
 
-Note in the above example we made use of the `reduce` method. It is very useful to know how it works! Overall, it returns a value. As its first argument, it receives a function, of which itself has 2 paramters (the overall result, and the current value). For each item in the array, the function passed into `reduce` will do the logic you specify using the current value and the current result.
+Note in the above example we made use of the `reduce` method. It is very useful to know how it works! Overall, it returns a value. As its first argument, it receives a function, of which itself has 2 parameters (the overall result, and the current value). For each item in the array, the function passed into `reduce` will do the logic you specify using the current value and the current result.
 
 Also note that when we call the `add` method, we do not pass an array of numbers! Rather, we are passing a list of individual numbers. Though we could pass an array, by using our new-found knowledge of the _spread operator_!:
 
@@ -739,7 +734,7 @@ const nums = [5, 10, 2, 3];
 add(...nums); // Passes in each element from the nums array, as a list of individual elements
 ```
 
-It's easy to see how the concept of _rest parameters_ is useful for accepting an unlimited amount of arguments. In fact, the `push` method uses _rest params_ to allow a coma-seperated list of items to be pushed.
+It's easy to see how the concept of _rest parameters_ is useful for accepting an unlimited amount of arguments. In fact, the `push` method uses _rest params_ to allow a coma-separated list of items to be pushed.
 
 In TypeScript, we can combine this concept with Tuples! If we know we want to support multiple arguments **but** know how many there will be:
 
@@ -747,7 +742,7 @@ In TypeScript, we can combine this concept with Tuples! If we know we want to su
 const add = (...numbers: [number, number, number, number]) => { ... };
 ```
 
-Note that in the type definition we stil had to explicitely specify that we want the Tuple to contain 4 numbers. The alternative would have been lengthier:
+Note that in the type definition we still had to explicitly specify that we want the Tuple to contain 4 numbers. The alternative would have been lengthier:
 
 ```js
 const add = (num1: number, num2: number, num3: number, num4: number) => { ... };
@@ -812,7 +807,7 @@ TypeScript not only compiles your code from TypeScript-only features into corres
 
 In this module, we will dive into classes and interfaces.
 Classes already exist in modern JavaScript. Interfaces are entirely new, though!
-We will expolore what these things are and why we use them. We will explore classes and the concept of inheritance. We will also explore Interfaces
+We will explore what these things are and why we use them. We will explore classes and the concept of inheritance. We will also explore Interfaces
 
 ### What Are Classes
 
@@ -841,7 +836,7 @@ Classes & Instances
 
 ### Creating a First Class
 
-- In a way, classes are syntatic sugar for JavaScript's _Constructor functions_
+- In a way, classes are syntactic sugar for JavaScript's _Constructor functions_
 - Convention to start a class name with an uppercase character
 
 ```js
@@ -993,7 +988,7 @@ Another modifier (but not an _access_ type) is the `readonly` modifier.
 How is readonly different than const?
 
 - They are essentially the same, except readonly is used with class/interface properties, while const is expected to be used with variables.
-- readonly is cehcked only during type-checking (compile time) while const is checked during runtime
+- readonly is checked only during type-checking (compile time) while const is checked during runtime
 - Declaring a property readonly doesn't mean that its value can't be changed: It means that the property cannot be re-assigned, example:
 
 ```js
@@ -1107,7 +1102,7 @@ const lastReport = accountingDepartment.mostRecentReport;
 ```
 
 - A Getter is useful when we want to add logical checks or need to take multiple steps in order to derive the value we wish to return.
-- Useful when working in conjunction with private / protected properties, where we don't want the user to alter the value directly, as we encapulate how the value is handled in our Getter itself.
+- Useful when working in conjunction with private / protected properties, where we don't want the user to alter the value directly, as we encapsulate how the value is handled in our Getter itself.
 - You don't execute it as a method! Just treat it like a normal property, and behind-the-scenes it will execute the method.
 
 ** Setter **
