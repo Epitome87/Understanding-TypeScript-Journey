@@ -59,7 +59,7 @@ We can install TypeScript with npm (therefore we need NodeJS):
 
 Our TypeScript version looks like this:
 
-```js
+```ts
 const button = document.querySelector('button');
 const input1 = document.getElementById('num1')! as HTMLInputElement;
 const input2 = document.getElementById('num2')! as HTMLInputElement;
@@ -138,7 +138,9 @@ Recommended Extensions
 
 ### The Course Project Setup
 
-We create a template project that will serve as a starter for each project in the course. It's a simple skeleton HTML file that links a script called "app.js", along with an "app.ts" file that we will compile to app.js via `tsc app.ts`
+We create a template project that will serve as a starter for each project in the course. It's a simple skeleton HTML file that links a script called "app.js", along with an "app.ts" file that we will compile to app.js via `tsc app.ts`.
+
+We also `npm install --save-dev lite-server` and add a value of _start_ in our package.json file, under the _scripts_ key. This gives us a simple development server which will help serve our site at localhost:3000, allowing us to avoid manually reloading our webpage after each change. Note we could also use the more popular _Live Server_ extension.
 
 ## Section 2: TypeScript Basics & Basic Types
 
@@ -155,30 +157,58 @@ TypeScript adds many more types to the JavaScript language, and enables you to w
 Core Types (JS already knows)
 
 - number
+  - Examples: `1, 5.3, -10`
   - Only one number type; no special type for integers vs floats
   - Other programming languages have other types, like floats, doubles, etc
 - string
-  - "Hi", 'Hi', `Hi`
+  - Examples: `` "Hi", 'Hi', `Hi` ``
   - All text values
 - boolean
-  - true, false
+  - Examples: `true, false`
   - Just these two, no "truthy" or "falsy" values
+- object
+  - Examples: `{ age: 30 }`
+  - Any standard JavaScript object
+  - More specific types (type of object) are possible
+- Array
+  - Examples: `[1, 2, 3]`
+  - Any JavaScript array
+  - Type can be flexible or strict (Regarding the element types)
+- Tuple (not in standard JavaScript)
+  - Examples: [1, 2]
+  - Added by TypeScript: Fixed-length, fixed-type array
+- Enums (not in standard JavaScript)
+  - Examples: `enum { NEW, OLD }`
+  - Added by TypeScript: Automatically enumerated global constant identifiers
+- Any
+  - Examples: Anything!
+  - Any kind of value, no specific type of assignment
 
 In TypeScript, we specify what type of values we want by adding `: <type>` after the variable, as in:
 
-```js
+```ts
 function add(n1: number, n2: number) {}
 ```
 
 The default type is `any` (as in, "I don't care what the type is")
 
-**NOTE** that TypeScript's type system only helps you during _development_ (i.e before the code gets compiled)
+**NOTE** that TypeScript's type system only helps you during _development_ (i.e before the code gets compiled). It does not change your run-time code; it's merely an extra sanity check during development. By default TypeScript doesn't even block compilation of erroneous code.
+
+### Importing: Type Casing
+
+In TypeScript, you work with types like string or number all the time.
+
+Important: It is `string` and `number` (etc.), NOT String, Number etc.
+
+The core primitive types in TypeScript are all lowercase!
 
 ### TypeScript Types vs JavaScript Types
 
 In JavaScript, we can use `typeof` to get the type of a certain value: `console.log(typeof number1)` would give "number"
 
-The key difference is: JavaScript uses "dynamic types" (resolved at runtime), and TypeScript uses "static types" (set during development)
+The key difference is: JavaScript uses "dynamic types" (resolved at runtime), and TypeScript uses "static types" (set during development).
+
+TypeScript also knows of _much_ more types than JavaScript!
 
 Sometimes it is useful to check the type of something at runtime. But other times, it's nice to know it during development! With TypeScript, we **only** get the support during development, not runtime.
 
@@ -186,7 +216,7 @@ Sometimes it is useful to check the type of something at runtime. But other time
 
 Example using the 3 core types:
 
-```js
+```ts
 function add(n1: number, n2: number, showResult: boolean, phrase: string) {
   if (showResult) console.log(`${phrase} ${n1 + n2}`);
 
@@ -221,7 +251,7 @@ Unlike JavaScript, TypeScript warns us during development if we try to access a 
 
 Object **types** in TypeScript are used to describe the type of object that is to be used. Instead of commas, TypeScript shows semi-colons, as follows:
 
-```js
+```ts
 const person = {
     name: string;
     age: number;
@@ -231,7 +261,7 @@ const person = {
 Note here is the syntax TS shows as our type for this object (shape, if you will) that an object of type "person" must have to be valid.
 We can tell TypeScript that we do want to work with just a generic object by doing:
 
-```js
+```ts
 const person: object = {
   name: 'Matthew',
   age: 34,
@@ -244,19 +274,19 @@ If we leave the `: object`, doing something like `person.name` will give us a wa
 
 We can also do the following, which is similar to specifying type `object`:
 
-```js
+```ts
 const person: {} = {
   name: 'Matthew',
   age: 30,
 };
 ```
 
-But then we can get more detailed, and define exactly what our object shape should be!
+But then we can get more detailed, and define exactly what our object shape should be! We do this by providing key-type entries:
 
-```js
+```ts
 const person: {
-  name: string,
-  age: number,
+  name: string;
+  age: number;
 } = {
   name: 'Matthew',
   age: 30,
@@ -274,6 +304,24 @@ Array
 - [1, 2, 3]
 - Any JS array is supported. Types can be flexible or strict (regarding the element types)
 
+To specify a strict array of a certain type, we could write:
+
+```ts
+let favoriteActivities: string[];
+favoriteActivities = ['Basketball', 'Coding']; // Valid
+favoriteActivities = ['Coding', 5]; // Invalid -- we want string elements
+```
+
+To allow an array of flexible, varying types, we could write:
+
+```ts
+let favoriteActivities: any[];
+```
+
+The type `any` essentially means "do / allow whatever you want". Try to avoid it as much as possible -- the flexibility negates the advantages of TypeScript!
+
+See the next code block for both an _Array_ and a _Tuple_ example
+
 ### Working with Tuples
 
 TypeScript adds several new types that JavaScript does not know
@@ -283,12 +331,12 @@ Tuple Type
 - Example: [1, 2]
 - Added by TypeScript: It is a fixed-length, fixed-type array
 
-```js
+```ts
 const person: {
-  name: string,
-  age: number,
-  hobbies: string[],
-  role: [number, string],
+  name: string;
+  age: number;
+  hobbies: string[];
+  role: [number, string];
 } = {
   name: 'Matthew',
   age: 34,
@@ -297,28 +345,28 @@ const person: {
 };
 ```
 
-Here, we have to specify that the "role" property is a Tuple. Otherwise TS will assume it's an array that can hold either string or number. To define a tuple, we simply use brackets, and a comma-separated list of types that represent the data we want in the tuple. These will be the _exact_ order we expect to assign to this property. This tells TypeScript: "I want to have a special array with exactly 2 elements, the first being a number and the second being a string." Any assignments to "role" must conform to this rule-set. So `person.role[1] = 10;` would not work, as we want a string in the 2nd position.
+Here, we have to specify that the "role" property is a _Tuple_. Otherwise TS will assume it's an array that can hold either string or number. To define a tuple, we simply use brackets, and a comma-separated list of types that represent the data we want in the tuple. These will be the _exact_ order we expect to assign to this property. This tells TypeScript: "I want to have a special array with exactly 2 elements, the first being a number and the second being a string." Any assignments to "role" must conform to this rule-set. So `person.role[1] = 10;` would not work, as we want a string in the 2nd position.
 
 But `person.role.push("admin");` works. Why? We told TS we only want 2 elements.
 
-- Push is an exception, which is allowed in Tuples. Unfortunately TS cannot catch that error.
+- `push()` is an exception, which is allowed in Tuples. Unfortunately TS cannot catch that error.
 
 With Tuples, TypeScript provides us some support regarding the length. We will get errors if we have too few or too many arguments inside our brackets when assigning a value to that Tuple property: `person.role = [0]; // not allowed!` `person.role = [0, "Admin", "user"]; // not allowed!`
 
-If you have a scenario where you need exactly _x_ amount of values in an array, and you know the type of each, consider using a Tuple over an Array. You'll get even more strictness into the app!
+If you have a scenario where you need exactly _x_ amount of values in an array, and you know the type of each in advance, consider using a Tuple over an Array. You'll get even more strictness into the app!
 
 ### Working with Enums
 
 Enum Type
 
 - JavaScript does not know this type (though other languages do, such as C#)
-- `enum {NEW, OLD}`
-- Added by TS: Automatically enumerated global constant identifiers
+- Example: `enum {NEW, OLD}`
+- Added by TypeScript: Automatically enumerated global constant identifiers
 - Human readable labels you can work with
 
 Enums can be declared as follows:
 
-```js
+```ts
 enum Role = { ADMIN, READ_ONLY, AUTHOR };
 ```
 
@@ -326,14 +374,21 @@ enum Role = { ADMIN, READ_ONLY, AUTHOR };
 
 **Important:** You will often see enums with all-uppercase values, but that's not a _must-do_. You can go with _any_ value names
 
-By default, the first identifier is assigned to the number 0, and each one thereafter is incremented by 1. You can change the starting value (or give each identifier a custom value) as follows:
+By default, the first identifier is mapped to the number 0, and each one thereafter is incremented by 1. You can change the starting value (or give each identifier a custom value) as follows:
 
-```js
+```ts
 enum Role = { ADMIN = 3, READ_ONLY, AUTHOR }; // READ_ONLY is = 4, and AUTHOR is = 5
 enum Role = { ADMIN = 5, READ_ONLY = "READ_ONLY", AUTHOR = 10 };
 ```
 
-Enums are a great construct when you want identifiers that are human-readable and have some mapped value behind the scenes.
+Enums are a great construct when you want identifiers that are human-readable and have some mapped value behind the scenes:
+
+```ts
+const person = {
+  name: 'Matthew',
+  role: Role.ADMIN,
+};
+```
 
 ### The any Type
 
@@ -345,7 +400,7 @@ Any
 - Really flexible
 - Avoid when possible! It takes away all advantages TypeScript gives you. You're basically just treating a variable as if it were plain JavaScript
 - Instead, either explicitly set it to a type or let TS use its powerful inference
-- Can use as a fallback when you have data that you _really_ can't know what type it may be (but provide some runtime type checking)
+- Can use as a fallback when you have data that you _really_ can't know what type it may be (but provide some traditional runtime type checking such as checking the `typeof` the value)
 
 ### Union Types
 
@@ -353,7 +408,7 @@ A Union type is one that can accept more than one type ("union").
 
 For example, we could rewrite our "add" method to "combine" either a number or a string:
 
-```js
+```ts
 function combine(input1: number | string, input2: number | string) {
   return input1 + input2;
 }
@@ -366,7 +421,7 @@ const combinedNames = combine('Matthew', 'Caitlin');
 
 We can work around this issue by adding runtime type checking:
 
-```js
+```ts
 function combine(input1: number | string, input2: number | string) {
   let result;
   if (typeof input1 === 'number' && typeof input2 === 'number') {
@@ -389,7 +444,7 @@ Literal Types
 
 Example usage:
 
-```js
+```ts
 function add(num1: number, num2: number, resultType: 'round-up' | 'round-down') {
   if (resultType === 'round-up') {
     return Math.ceiling(num1 + num2);
@@ -399,15 +454,13 @@ function add(num1: number, num2: number, resultType: 'round-up' | 'round-down') 
 }
 ```
 
-In the above, any string besides "round-up" or "round-down" will not be allowed. Often used in the context of a Union type (as it being the only allowed string would not make sense at all).
+In the above, any string besides "round-up" or "round-down" will not be allowed. Literal types are often used in the context of a Union type (as it being the only allowed string would not make sense at all).
 
 ### Type Aliases Custom Types
 
-TypeScript also features "type alias". We use the special TS keyword "type", followed by the name we wish to call the type, followed by the type(s) we want to encode in our alias.
+TypeScript also features **type alias**. We use the special TypeScript keyword `type`, followed by the name we wish to call the type, followed by the type(s) we want to encode in our alias.
 
-### Type Aliases Custom Types
-
-```js
+```ts
 type Rounding = 'round-up' | 'round-down';
 function add(num1: number, num2: number, resultType: Rounding) {
   // Etc..
@@ -415,15 +468,18 @@ function add(num1: number, num2: number, resultType: Rounding) {
 ```
 
 This is especially useful for Union types, as we don't have to type each individual type each time. We can, of course, use it with the core types as well:
-`type Combinable = number | string;`
 
-This allows us to be more concise and descriptive.
+```ts
+type Combinable = number | string;
+```
+
+This allows us to be more concise and descriptive by choosing intelligent names for our type.
 
 ### Function Return Types & void
 
 TypeScript is very good at inferring what our return type is from a function. But we can explicitly state it as well. To do so, we simply put a colon after the parameter list, followed by the type we wish to be returned by the function:
 
-```js
+```ts
 function add(n1: number, n2: number): string {
   return n1.toString() + n2.toString();
 }
@@ -439,20 +495,37 @@ The void Return Type
 - To confuse matters even more, we can use `undefined` as a type in TypeScript: `let someValue: undefined;`
 - To confuse even more, a function is not allowed to have a `undefined` return type!
 
-  - For this scenario, the only valid use of `undefined` in a return type is when we are simply returning, with no value: `return;`
+  - For this scenario, the only valid use of `undefined` in a return type is when we are simply returning, with no value:
+
+  ```ts
+  function printResult(num: number): undefined {
+    return;
+  }
+  ```
+
   - We can also use the `void` return type in a function that simply returns `return;` aas well.
 
-**Summary**: Probably use `void` in all scenarios where a function does not return a value.
+**Summary**: Probably use `void` over `undefined` in all scenarios where a function does not return a value, or let TypeScript infer the return type.
+
+```ts
+function printResult(num1: number, num2: number): void {
+  console.log(`Result is: ${num1 + num2}`);
+}
+```
 
 ### Functions as Types
 
 Function Types
 
-We can ensure a value can only be set to a function as follows: `let combineValues: Function;`
+We can ensure a value can only be set to a function as follows:
+
+```ts
+let combineValues: Function;
+```
 
 So we could set `combineValues` to our `add` method, and then call it later:
 
-```js
+```ts
 combineValues = add;
 combineValues(8, 9); // Returns 17
 combineValues = 5; // Appropriately gives an error, since 5 is not a function
@@ -462,11 +535,12 @@ This is a good start, but this doesn't ensure us much. We could easily set `comb
 
 Can we be more precise in defining how the function should look like? Yes! With Function Types:
 
-```js
+```ts
 let combineValues: (a: number, b: number) => number;
 function print(text: string) {
   console.log(text);
 }
+combineValues = add; // Valid type
 combineValues = print; // Rightfully TS does not allow this now!
 ```
 
@@ -476,7 +550,7 @@ This tells TypeScript that `combineValues` should accept _any_ function, but _on
 
 We can also work with Callbacks
 
-```js
+```ts
 function addAndHandle(n1: number, n2: number, cb: (num: number) => void) {
   const result = n1 + n2;
   cb(result);
@@ -487,15 +561,13 @@ addAndHandle(10, 20, (result) => {
 });
 ```
 
-(Confusing, should re-watch this video again!)
-
-In the above, we are not forced to pass in a callback that does not return anything. It just tells us that anything we might return will not be used.
+In the above, we are not forced to pass in a callback that does not return anything. It just tells us that anything we might return will not be used. We're simply saying that in the addAndHandle function, we will not be doing anything with the value returned by the callback. Our defined callback itself actually could return a value in its definition, and TypeScript will not disallow us to pass it as a third argument to addAndHandle.
 
 ### The unknown Type
 
 There is another TypeScript type, called `unknown`
 
-```js
+```ts
 let userInput: unknown;
 userInput = 5;
 userInput = 'Matthew';
@@ -503,14 +575,14 @@ userInput = 'Matthew';
 
 In the above, re-assignment to the userInput variable is allowed. So in this way, it seems like `unknown` is just like `any`. But consider:
 
-```js
+```ts
 let userName: string;
-userName = userInput; // Not allowed!
+userName = userInput; // Not allowed, although this would be valid if userInput was type any
 ```
 
 Whereas with `any` as the type for `userInput`, such an assignment would be allowed. The following, however, would be allowed:
 
-```js
+```ts
 if (typeof userInput === 'string') userName = userInput;
 ```
 
@@ -529,7 +601,7 @@ As with `any`, not ideal to use too often. But this makes `unknown` better than 
 - Used in functions that, well, _never_ will return anything.
 - For instance, a function that _throws_ an error; it results in a crash of sorts, and will genuinely never return a result. If we tried to console.log such a function, nothing would be printed (in contrast to `undefined` being printed in functions that also have no explicit return)
 
-```js
+```ts
 function generateError(message: string, code: number): never {
   throw { message: message, errorCode: code };
 }
@@ -537,7 +609,7 @@ function generateError(message: string, code: number): never {
 console.log(generateError('An error occurred!', 500)); // Nothing is printed
 ```
 
-Although we could get by without specifying any return type in the previous function, or put `void` as the return type (which is also the inferred type TypeScript will assume anyways), it is best to specify `never` to be really clear about the functions behavior.
+Although we could get by without specifying any return type in the previous function, or put `void` as the return type (which is also the inferred type TypeScript will assume anyways, as `never` is a little newer), it is best to specify `never` to be really clear about the function's behavior.
 
 Another function that would never return is a function with an infinite loop!
 
@@ -592,7 +664,7 @@ Whew! Learned a lot...
 
 ### Module Introduction
 
-We'll take a look at more modern JavaScript syntax, and how TypeScript handles it.
+We'll take a look at more modern JavaScript syntax, and how TypeScript handles it. These are features like let, const, arrow functions, destructuring syntax, spread operator, etc.
 
 ### let and const
 
@@ -600,16 +672,18 @@ Great reference for JS features, which browsers support them, and which compiler
 
 Added in JavaScript ES6 or more recent are some important features. We will examine a few of them.
 
-- `const` is a variable type which cannot be changed. TypeScript throws an error when we try to make a reassignment to a `const` variable.
+- `const` is a variable type which cannot be changed. TypeScript throws an error (during development) when we try to make a reassignment to a `const` variable, whereas JavaScript only complains during runtime.
 - `let` is a variable which can be changed. It is similar to `var` (which you should not use any more).
 - `let` and `const` have different scopes than `var`
   - `var` has global and function scope (variables outside of functions available everywhere, those defined in functions only available there)
-  - With `var`, JS doesn't know any other scope besides function and global, so using `var` in an if-statement makes the variable available globally -- not ideal!
-- `let` and `const` introduce the concept of block scope -- always available in the block you define it or lower block. Blocks almost always snippet surrounded by curly braces
+  - **With `var`, JS doesn't know any other scope besides function and global**, so using `var` in an if-statement makes the variable available globally -- not ideal!
+- `let` and `const` introduce the concept of **block scope** -- always available in the block you define it or lower blocks. A block is almost always a code snippet surrounded by curly braces (if-statement, for-loop, function, or even just curly braces you place without necessity)
 
 ### Arrow Functions
 
 Another major feature added in ES6 were _arrow functions_.
+
+We write the function as an expression, which you store in a variable:
 
 ```js
 const add = (a, b) => {
@@ -633,9 +707,9 @@ const printOutput = (output) => console.log(output);
 
 (**NOTE** that if you have _no_ parameters, you _have to_ use an empty pair of parentheses: `() => { ... }`)
 
-However, in TypeScript we need to provide more for the above printOutput to work, as it is not happy we don't specify the type for output:
+However, in TypeScript we need to provide more for the above printOutput to work, as it is not happy we don't specify the type for output. We could enjoy the parentheses-less argument syntax if we had our type assignment elsewhere, like with a function type assigned to the constant:
 
-```js
+```ts
 const printOutput: (out: number | string) => void = (output) => console.log(output);
 ```
 
@@ -648,19 +722,21 @@ if (button) {
 }
 ```
 
-Since TypeScript knows what `addEventListener` will provide to us (event object), TS can infer this, so you don't have to specify the function type anywhere.
+Since TypeScript knows what `addEventListener` will provide to us (event object), TypeScript can infer this, so you don't have to specify the function type anywhere.
 
 ### Default Function Parameters
 
-Another nice function feature in modern JS is the ability to assign default arguments to function parameters.
+Another nice function feature in modern JavaScript is the ability to assign default arguments to function parameters.
 
-```js
+```ts
 // Second argument will have its value as 10 if none passed into the call
 const add = (a: number, b: number = 10) => a + b;
 add(1); // Returns 11 (1 + default 10)
 ```
 
 **Important** to note that the default arguments must be last in the parameter list. Makes sense; if we skip an argument, it's hard to know which argument we are omitting unless they come last. JS / TS do not look at your function definition and guess which one you are attempting to target or omit.
+
+Obviously, the default value must match the specified type for the argument.
 
 ### The Spread Operator (...)
 
@@ -839,11 +915,8 @@ Classes & Instances
 - In a way, classes are syntactic sugar for JavaScript's _Constructor functions_
 - Convention to start a class name with an uppercase character
 
-```js
+```ts
 class Department {
-  // name is a "field" of the class
-  name: string;
-
   // Function tied to this class, executed when object is being created
   constructor(n: string) {
     this.name = n;
@@ -853,6 +926,22 @@ class Department {
 // Creates a new JS object based on the Department blueprint
 const accounting = new Department('Accounting');
 ```
+
+```ts
+class Department {
+  // name is a "field" of the class. This will become a property on the object instance of this class
+  name: string = 'Accounting';
+
+  constructor() {
+    // Note we aren't setting this.name, as we're setting it to a default value outside the constructor. (Not particularly useful here, just for example purposes!)
+  }
+}
+
+// accounting.name will be 'Accounting'
+const accounting = new Department();
+```
+
+**Note** in the above example, we are using a relatively new concept in JavaScript called **Class field declarations**, released after ES6. This is where we declare our fields ahead of time, rather than in the constructor (similar to languages such as C#). According to caniuseit.com, class fields are 93.48% support as of March 2023.
 
 ### Compiling to JavaScript
 
@@ -905,7 +994,7 @@ const accounting = new Department('Accounting');
 accounting.describe(); // The "this" in this.name in Department.describe now refers to the accounting object
 ```
 
-Note we do not use a colon after the method name; it is not a property of an object, after all!
+Note we do not use a colon after the method name; it is not a property of an object literal, after all!
 
 To refer to a Class property or method from inside of the Class, we have to use the `this` keyword.
 The `this` keyword can be a bit tricky!
@@ -919,34 +1008,71 @@ In general, we can _typically_ think of `this` as being the thing that is respon
 
 In TypeScript, we signal that we want the "this" inside of our describe method to always refer to an instance based on the Department class:
 
-```js
+```ts
 describe(this: Department) {
   console.log("Department: ", this.name);
 }
 ```
 
-- Now TypeScript would warn us of an error when trying we have our accountingCopy object attempt to call "describe" -- as it should, since accountingCopy is not an instance of Department.
-- TypeScript would also be happy if we also just gave accountingCopy a "name" property: `const accountingCopy = { name: "Accounting", describe: accounting.describe }`. So it would not fuss about it calling "describe", even though we technically did not create it based off a Department class:
+- Note adding the `this` parameter to the method doesn't make the method expect a parameter (we can still call 'describe()' without any value). Rather, this is interpreted by TypeScript to be a hint regarding what `this` should refer to.
+- Think of it like: "When describe() is executed, `this` inside of it should always refer to an instance that's based on the Department class.
+- Now TypeScript would warn us of an error when trying to have our accountingCopy object attempt to call "describe" -- as it should, since accountingCopy is not an instance of Department.
+- TypeScript would also be happy if we also just gave accountingCopy a "name" property: `const accountingCopy = { name: "Accounting", describe: accounting.describe }`. So it would not fuss about it calling "describe", even though we technically did not create it based off a Department class.
 
 ### Private and Public Access Modifiers
 
-Classes often get more complex than what we've been seeing so far. If we have a complex Class that uses an array internally to store a list of employees, for example, we would typically provide a method (addEmployee(employeeName)) to facilitate the process of adding an employee to this list. We may then want to prohibit direct access to the employees array that the Class is using.
+Classes often get more complex than what we've been seeing so far. If we have a complex Class that uses an array internally to store a list of employees, for example, we would typically provide a method (addEmployee(employeeName)) to facilitate the process of adding an employee to this list. We may then want to prohibit direct access to the employees array that the Class is using. This ensures we interact with the underlying data structure that holds employees in a consistent, enforced manner. Perhaps the addEmployee method even has validation, making it even more useful than if we were just able to access the underlying array directly.
 
-- We can do so with `private` properties. We simply add the `private` keyword in front of a property or method.
+- We can do so with **private** properties. We simply add the `private` keyword in front of a property or method.
 - This signals that the property / method marked with `private` is only accessible from within the Class itself.
 - This is considered an **access modifier**.
-- There is `private` and `public` (with public being the default).
+- There is `private` and `public` (with public being the default, and thus we don't need to explicitly write it).
+
+```ts
+class Department {
+  public name: string; // Not necessary to write public -- it's the default
+  private employees: string[] = []; // A private field
+
+  constructor(n: string) {
+    this.name = n;
+  }
+
+  addEmployee(employee: string) {
+    this.employees.push(employee);
+  }
+}
+
+const mathDepartment = new Department('Math');
+mathDepartment.employees.push({ name: 'Matt' }); // Invalid! employees is private
+mathDepartment.addEmployee({ name: 'Matt' }); // Matt successfully added as employee
+```
 
 - In the past, JavaScript had no notion of the public/private -- all properties were always public. But modern JavaScript allows this concept (**not** with the `private` and `public` keyword, though) -- and naturally TypeScript does as well! TypeScript allows this at runtime to check for errors, even if compiling to an older version of JavaScript that does not actually provide functionality for access modifiers.
+
+**VERY IMPORTANT** to note that JavaScript's private field syntax does **not** use the `private` and `public` keywords; this is a TypeScript concept. In more modern, Vanilla JavaScript, we would do private and public fields like:
+
+```js
+class Department {
+  #employees = [];
+
+  constructor(name) {
+    this.name = name;
+  }
+
+  addEmployee(employee) {
+    this.#employees.push(employee);
+  }
+}
+```
 
 ### Shorthand Initialization
 
 Consider a typical Class with many fields:
 
-```js
+```ts
 class Department {
   private id: string;
-  name: string;
+  name: string; // Remember, public is implied by default
   private employees: string[] = [];
   private location: string;
 
@@ -962,7 +1088,7 @@ Notice all the duplicate code; we have to declare our fields up top, and if we w
 
 ```js
 class Department {
-  private employees: string[] = []; // We keep as a field; we do not initialize in constructor
+  private employees: string[] = []; // We keep as a field; we do not initialize in constructor via argument
 
   constructor(private id: string, public name: string, private location: string) {
     // No explicit initialization needed!
@@ -976,6 +1102,8 @@ Several things to consider:
 - The argument names **must** be the same as the field names! If we specify an argument called "loc" (short for location), it produced a field with _that_ name.
 - We **must** provide an access modifier (`private` or `public`).
 
+**Important to note** that this is only a valid shorthand in TypeScript, not vanilla JavaScript.
+
 ### readonly Properties
 
 Another modifier (but not an _access_ type) is the `readonly` modifier.
@@ -985,13 +1113,21 @@ Another modifier (but not an _access_ type) is the `readonly` modifier.
 - Can't write to the property after it is initialized
 - A way to clearly mark that we do not wish for this value to ever be altered
 
+```ts
+class Department {
+  constructor(private readonly id: string, public name: string) {
+    // etc
+  }
+}
+```
+
 How is readonly different than const?
 
 - They are essentially the same, except readonly is used with class/interface properties, while const is expected to be used with variables.
 - readonly is checked only during type-checking (compile time) while const is checked during runtime
 - Declaring a property readonly doesn't mean that its value can't be changed: It means that the property cannot be re-assigned, example:
 
-```js
+```ts
 interface Person {
   readonly info: { name: string; age: number };
 }
@@ -1000,7 +1136,7 @@ interface Person {
 // ...
 
 person.info.age += 1; // This is valid!
-person.info = { name: "Matthew", age: 34 }; // This is invalid!
+person.info = { name: 'Matthew', age: 34 }; // This is invalid!
 ```
 
 - Another difference, in regards to Arrays, is you can push / pop / reassign individual elements of an Array when using `const`. But with `readonly`, such operations will produce an error.
@@ -1019,19 +1155,23 @@ class AccountingDepartment extends Department {}
 - The class which is inheriting automatically gets everything the parent class has, including its constructor (if we don't provide our own)
 - But we can add our own constructor, making sure we call `super` in the constructor. It **must** be included, and called like a function:
 
-```js
+```ts
 class AccountingDepartment extends Department {
   // public admins: string[]; // Given this due to shorthand syntax
   constructor(id: string, public admins: string[]) {
     super(id, 'Accounting');
+    // this.admins = admins; // Given this due to shorthand syntax
   }
 }
 
-const accountingDept = new AccountingDepartment("A1", ["Matthew", "Caitlin"]);
+const accountingDept = new AccountingDepartment('A1', ['Matthew', 'Caitlin']);
 ```
 
+- `super` calls the constructor of the parent / base class.
 - The call to `super` **must** take arguments of the parent class constructor.
 - You have to call `super` first in the constructor before doing anything involving the `this` keyword!
+
+A class that inherits from another can define its own unique properties and methods not found within the base class.
 
 ### Overriding Properties & the Protected Modifier
 
@@ -1085,11 +1225,11 @@ dog.bark('I GOOD BOI');
 
 **Getter**
 
-Getters and setters are another useful feature with Classes, and are also available in vanilla JavaScript.
+Getters and setters are another useful feature with Classes, and are also available in modern vanilla JavaScript.
 
-A _getter_ is basically a property where you execute a method when you retrieve a value. Allows you to add more complex logic. They are defined like methods, and require you to return something.
+A _getter_ is basically a property where you execute a method when you retrieve a value. Allows you to add more complex logic. They are defined like methods, and require you to return something:
 
-```js
+```ts
 private lastReport: string;
 
 get mostRecentReport() {
@@ -1105,18 +1245,21 @@ const lastReport = accountingDepartment.mostRecentReport;
 - Useful when working in conjunction with private / protected properties, where we don't want the user to alter the value directly, as we encapsulate how the value is handled in our Getter itself.
 - You don't execute it as a method! Just treat it like a normal property, and behind-the-scenes it will execute the method.
 
-** Setter **
+**Setter**
 
 Using the `set` keyword, we can define a **setter**
 
-```js
+```ts
 set mostRecentReport(value: string) {
   // Logic to set most recent report, e.g.:
   if (!value) {
     throw new Error("Please pass in a valid value!");
   }
-  // ... Etc
+  this.reports.push(value);
+  this.lastReport = text;
 }
+
+accounting.mostRecentReport = 'New report';
 ```
 
 Setters and Getters are great for encapsulating logic and for adding extra logic for when you try to read or set a property.
@@ -1131,16 +1274,16 @@ Static methods & properties are another useful concept related to properties and
 
 We simply add the `static` keyword in front of a property or method:
 
-```js
+```ts
 static createEmployee(name: string) {
-// Logic,
-employees.push({ name });
+  employees.push({ name });
+  return { name: name };
 }
 
-Department.createEmployee("Matthew");
+const employeeMatt = Department.createEmployee("Matthew");
 ```
 
-- When you `static` on a class, you cannot access them in non-static methods (constructor as well) using the `this` keyword, since those methods are being called on an instance of an object
+- When you add `static` properties or methods on a class, you cannot access them in non-static methods (constructor as well) using the `this` keyword, since those methods are being called on an instance of an object. Static properties and methods aren't available on an instance of the class, as the entire idea of them is they are part of the class itself.
 - If you want access them inside non-static methods, you would use the `Classname.fieldname` syntax, such as `Department.numEmployees`
 - Cannot mark the constructor as `static`
 
