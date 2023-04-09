@@ -1288,3 +1288,88 @@ const employeeMatt = Department.createEmployee("Matthew");
 - Cannot mark the constructor as `static`
 
 ### Abstract Classes
+
+We know we can override methods. But sometimes we don't want to just offer the _option_ of overriding a method, but rather _enforce_ the developer working with certain classes to implement / override a certain method. When? When we want to ensure a method is available in all child classes but we can't provide a default implementation in the base class, since the logic depends deeply on the inheriting class.
+
+- Do so by adding the `abstract` keyword to a method or property
+- For a method, it must be an empty method in base class. We force all inheriting classes to add and override the method
+- Must also add `abstract` in front of the `class` keyword in base class
+
+```ts
+abstract class Department {
+  protected employees: string[] = [];
+
+  constructor(protected readonly id: string, public name: string) {}
+
+  abstract describe(this: Department): void;
+}
+
+class ITDepartment extends Department {
+  admins: string[];
+
+  constructor(id: string, admins: string[]) {
+    super(id, 'IT');
+    this.admins = admins;
+  }
+
+  // This method MUST be implemented, since it is marked as abstract in parent!
+  describe() {
+    console.log('IT Department');
+  }
+}
+
+const department = new Department('Math'); // Invalid! Abstract class cannot be instantiated
+```
+
+- Note we do not provide an implementation for the abstract method. We simply write the name of it, along with its arguments and return type. We just write what it looks like, not how it works.
+
+- Useful if you want to enforce that all classes based on some other class share some common method or property. Same time you don't want to have to provide the concrete value / implementation in base class - child does
+- Classes marked with abstract cannot be instantiated! Simply exists to be inherited from with an enforced structure.
+
+### Singletons & Private Constructors
+
+We can also make a constructor private. Why? Consider the _singleton pattern_:
+
+**Singleton pattern**
+
+- Ensures we always have exactly only one instance of a certain class
+- Useful for situations where we can't / don't want to use static methods / properties, and we want to ensure we can't create multiple objects based on a class.
+
+How do we create a singleton?
+
+- Turn constructor into a private constructor using the `private` keyword
+  - Now we cannot use the `new` keyword outside of the class itself!
+- Create a private static variable to hold our _instance_ of the class (remember, we only want one instance total)
+- Create a static method which creates the instance appropriately
+  - Checks if we already have an instance. If we do, return it. If we don't, create one using the `new` keyword.
+
+```ts
+class AccountingDepartment extends Department {
+  private static instance: AccountingDepartment;
+
+  static getInstance() {
+    // Can also use AccountingDepartment.instance instead of 'this'.
+    if (this.instance) return this.instance;
+    this.instance = new AccountingDepartment(); // Will only ever be ran once
+    return this.instance;
+  }
+}
+
+const accounting = AccountingDepartment.getInstance();
+const accounting2 = AccountingDepartment.getInstance(); // Refers to same instance as above
+```
+
+### Classes - A Summary
+
+Whew, learned quite a bit!
+
+- Classes themselves
+- Their properties
+- Access modifiers
+  - Private (internal)
+  - Protected (internal in inherited classes)
+  - Public (access from everywhere)
+- Methods
+- Static methods / properties
+- Abstract methods / classes
+- Inheritance using extends keyword
