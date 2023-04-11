@@ -1373,3 +1373,171 @@ Whew, learned quite a bit!
 - Static methods / properties
 - Abstract methods / classes
 - Inheritance using extends keyword
+
+### A First Interface
+
+An **interface** describes the structure of an object.
+
+- Only exists in TypeScript -- not JavaScript
+- Defined using the `interface` keyword
+- Note we separate property/value pairs with a semi-colon
+- We don't provide concrete values; this is just the _structure_
+
+```ts
+interface Person {
+  name: string;
+  age: number;
+  greet(phrase: string) : void;
+}
+
+let user: Person;
+user = {
+  name: 'Matthew',
+  age: 36,
+  greet(phrase: string) {
+    console.log(`${phrase} ${this.name});
+  }
+}
+```
+
+### Using Interfaces with Classes
+
+Why do we need this? Can't we do the same with with the `type` keyword (and adding an equal sign)? As in:
+
+```ts
+type Person = {
+  // Etc...
+};
+```
+
+We technically could. But there are some differences:
+
+1. Interfaces can only be used to describe the structure of an object. No union types, etc
+2. Less flexible, thus more clear. More obvious we want to define the structure of an object, not some other type
+3. Can implement an interface in a class. Can be used as a contract a class can implement and has to adhere to
+
+```ts
+interface Greetable {
+  name: string;
+  greet(phrase: string): void;
+}
+
+class Person implements Greetable, AnotherInterface {
+  name: string; // Must define!
+
+  constructor(n: string) {
+    this.name = n;
+  }
+  greet(phrase: string) {} // Must define!
+}
+
+let user: Greetable; // Can also use type Person
+user = new Person('Matthew'); // Valid, Person implements Greetable
+```
+
+- Can use an interface as a type on some variable, which will actually store another class on another type that implements said type.
+- Can implement more than one interface. Remember, via class inheritance we can only inherit from one class.
+- Often used to share functionality amongst classes. Not their concrete implementation, but their structure.
+- A bit like abstract classes, but always no concrete implementation.
+
+### Why Interfaces
+
+Okay, but why?!
+
+- Force existence of methods
+- Other parts of code may need to rely on that structure
+- Don't have to know everything about an object / class, just that it has the method we are looking for
+
+### Readonly Interface Properties
+
+Inside of an Interface, we can also add the `readonly` modifier
+
+- Not we cannot add the other modifiers, `private` or `public` or `protected`
+- Makes it clear the property must only be set once, and is readonly there after
+- We could also do this on a `type`
+- We don't have to re-define a property / method as readonly in an implementing class:
+
+```ts
+interface Greetable {
+  readonly name: string;
+}
+
+class Person implements Greetable {
+  name: string; // No need for 'readonly' in front!
+}
+
+let user: Greetable;
+user = new Person('Matthew');
+user.name = 'Caitlin'; // Not valid; readonly!
+```
+
+### Extending Interfaces
+
+We can also implement inheritance in interfaces.
+
+Let's look at **not** using inheritance in interfaces:
+
+```ts
+interface Named {
+  readonly name: string;
+}
+
+interface Greetable {
+  greet(phrase: string): void;
+}
+
+class Person implements Greetable, Named {}
+```
+
+An alternative using inheritance in interfaces would be:
+
+```ts
+interface Named {
+  readonly name: string;
+}
+
+interface Greetable extends Named, AnotherInterface {
+  greet(phrase: string): void;
+}
+
+class Person implements Greetable {
+  name: string; // Required by Greetable interface, since it inherits this from Named
+  greet(phrase: string); // Required by Greetable interface itself
+}
+```
+
+- Note we can **extends** multiple interfaces, just like we can **implements** multiple!
+  - Remember: We cannot do this with classes; they can only **extends** one class
+
+Why split an interface like this?
+
+- Maybe on some objects you only want to force them to have a name, but not a greet method. On others you want force both
+
+This is a pure TypeScript feature! Not translated to JavaScript (as we will see)
+
+### Interfaces as Function Types
+
+Interfaces can also be used to define the structure of a function.
+
+Remember, we can also do this using:
+
+```ts
+type AddFn = (a: number, b: number) => number;
+
+const add: AddFn;
+add = (n1: number, n2: number) => {
+  return n1 + n2;
+};
+```
+
+But if interfaces are used to define the structure of an _object_, why can we do so on functions? Well, remember that **functions _are_ objects**!
+
+```ts
+interface AddFn {
+  (a: number, b: number): number;
+}
+```
+
+It's similar to how we would define a method in an interface, with the exception that we drop the function name. Essentially, we are defining an anonymous function. TypeScript understands this special syntax and realizes we want to use this interface as a function type.
+
+Using a custom type (like the original example) is probably a bit more common and shorter. But it's nice to be aware of this interface-based alternative.
