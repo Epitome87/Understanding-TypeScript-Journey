@@ -1637,3 +1637,268 @@ So -- under the hood, what does JavaScript produce / offer as an alternative to 
   - When being compiled, no new code is emitted
   - Historically, custom types in TypeScript could not be used like interfaces...
   - ...But now we _could_ replace an interface with custom types for objects, but not recommended
+
+## Section 6: Advanced Types
+
+##### `Originally Started: 4/22/2023, Completed: TBD`
+
+### Module Introduction
+
+Time to go beyond the basic types!
+
+In this module, we will look at:
+
+- Intersection Types
+- Type Guards
+- Discriminated Unions
+- Type Casting
+- Function Overloads
+
+### Intersection Types
+
+Intersection types are closely related to union types, but they are used very differently. An **intersection type combines multiple types into one**. This allows you to add together existing types to get a single type that has all the features you need.
+
+```ts
+type Admin = {
+  name: string;
+  privileges: string[];
+};
+
+type Employee = {
+  name: string;
+  startDate: Date;
+};
+
+type ElevatedEmployee = Admin & Employee; // { name: string, privileges: string[], startDate: Date }
+```
+
+Intersection types are closely related to interface inheritance; we could have achieved the same using interfaces:
+
+```ts
+// Object properties left out for brevity -- they would of course be required!
+interface Admin {}
+interface Employee {}
+interface ElevatedEmployee extends Admin, Employee {}
+```
+
+Although they are especially useful with object types, intersection types can be used on any type!
+
+```ts
+type Combinable = string | number;
+type Numeric = number | boolean;
+type Universal = Combinable & Numeric; // Supports type number
+```
+
+- In union types, the result of the intersection is the type that the **unions have in common**
+- In object types, it is the combination of all object properties
+
+### More on Type Guards
+
+Type guards is the idea / approach of checking if a certain property/method exists before trying to use it, or if we can do something with the type before we try to use it.
+
+Used more often than intersection types are **type guards**. They help us with union types.
+
+Remember from earlier that the return in the following function will not work:
+
+```ts
+function add(a: Combinable, b: Combinable) {
+  return a + b;
+}
+```
+
+We worked around this by creating a **type guard**:
+
+```ts
+function add(a: Combinable, b: Combinable) {
+  if (typeof a === 'string' || typeof b === 'string') {
+    return a.toString() + b.toString();
+  }
+  return a + b; // Here TypeScript knows a and b are numbers
+}
+```
+
+Type guards allow us to utilize the flexibility union types give us and still ensure our code runs correctly at runtime.
+
+We aren't just limited to type guards using the typeof keyword like above. Consider working with a union of object types, where the typeof keyword would provide us no value:
+
+```ts
+type Employee {}
+type Admin {}
+type UnknownEmployee = Employee | Admin;
+
+function printEmployeeInfo(employee: UnknownEmployee) {
+  console.log('Name: ' + employee.name);  // Valid: Employee AND Admin have name
+  console.log('Privileges: ' + employee.privileges);  // TS complains: If UnknownEmployee is of type Employee, privileges does not exist!
+}
+```
+
+We also can't creating a type guard doing:
+
+```ts
+if (employee.privileges)
+```
+
+TypeScript doesn't allow us to check the property at all! Not even when just checking if it exists.
+
+**The solution:**
+
+```ts
+if ('privileges' in employee) {
+  console.log('Privileges: ' + employee.privileges); // Valid type guard solution!
+}
+```
+
+- In the above, we could not make use of typeof against the employee passed to printEmployeeInfo; that would simply result in 'object', which doesn't really help.
+- Why couldn't we query `typeof employee === 'Employee'`? That is not a type JavaScript knows. Remember, this type check runs at runtime and uses JS, so we can only use comparisons on types JS knows. Type 'Employee' only exists in TS world, not compiled JS world.
+- We also couldn't simply check if the property is defined using the typical JS way.
+- In the end, we used the `"propertyName" in <objectName>` syntax.
+
+When working with classes, we can make use of the `instanceof` keyword as a type guard:
+
+```ts
+class Car {
+  drive() {
+    console.log("Vroom! I'm a car!");
+  }
+}
+
+class Truck {
+  drive() {
+    console.log("Vroom! I'm a truck!");
+  }
+
+  loadCargo(amount: number) {
+    console.log('Loading cargo...' + amount);
+  }
+}
+
+type Vehicle = Car | Truck;
+
+const vehicle1 = new Car();
+const vehicle2 = new Truck();
+
+function useVehicle(vehicle: Vehicle) {
+  vehicle.drive(); // Valid: Exists on Car and Truck
+  if ('loadCargo' in vehicle) {
+    // Valid type guard
+    vehicle.loadCargo(1000);
+  }
+
+  // More elegant: Eliminates risk of mistypes of property string
+  if (vehicle instanceof Truck) {
+    vehicle.loadCargo(1000);
+  }
+}
+```
+
+- Remember, `instanceof` is a vanilla JavaScript operator. It executes at runtime
+- JavaScript doesn't know the Truck _type_, but it knows constructor functions, which classes are translated to. TypeScript then able to find out if vehicle was created based on the Truck constructor function.
+- If we had used an interface rather than a class, we could not have made use of the `instanceof` keyword.
+
+### Discriminated Unions
+
+A special type of type guard (or something that helps with type guards) is the **discriminated union**.
+
+It is a pattern we can use with union types that makes implementing type guards easier. It is available when working with object types (and classes / interfaces) and union types:
+
+```ts
+interface Bird {
+  flyingSpeed: number;
+}
+
+interface Horse {
+  runningSpeed: number;
+}
+
+type Animal = Bird | Horse;
+
+function moveAnimal(animal: Animal) {
+  if ('flyingSpeed' in Animal) console.log('Moving with speed: ' + animal.flyingSpeed);
+}
+```
+
+In the above example, when it comes time to log the animal speed, we do not know which property to access: flyingSpeed (if dealing with a Bird) or runningSpeed (if dealing with a horse). Let's pretend we could not have simply named each method with the same name, or that the list of types in the Animal union is too large for a series of if-statements.
+
+To solve this problem ,we can build a _discriminated union_ by giving every interface in the union an extra property:
+
+```ts
+interface Bird {
+  type: 'bird';
+}
+interface Horse {
+  type: 'horse';
+}
+
+function moveAnimal(animal: Animal) {
+  let speed;
+  switch (animal.type) {
+    case 'bird':
+      speed = animal.flyingSpeed;
+      break;
+    case 'horse':
+      speed = animal.runningSpeed;
+      break;
+  }
+  console.log('Moving at speed: ' + speed);
+}
+
+moveAnimal({ type: 'bird', flyingSpeed: 10 });
+```
+
+- In the above, we add a property that is a literal type. For example, in the Bird interface the type property must hold a string, which must be 'bird'.
+- By convention we name this property `type` or `kind`.
+- We can now check the value of this property and react accordingly.
+
+This is a discriminated union because we have one common property in every object in the union which describes that object.
+
+### Type Casting
+
+**Type casting** helps you tell TS that some value is of a specific type when TS cannot detect it on its own.
+
+A good example is when we retrieve something from the DOM. Consider if we retrieve something based on its ID:
+
+```ts
+const paragraph = document.querySelector('p'); // TS knows this HTMLParagraphElement
+const something = document.querySelector('#someId'); // TS only knows this is an HTMLElement
+```
+
+If the element we are retrieving based on ID were a text input, we would not have access to the `value` property, as a generic HTMLElement does not have that property.
+
+There are two solutions:
+
+**Solution 1:**
+
+```ts
+const something = <HTMLInputElement>document.querySelector('#someId')!;
+```
+
+**Solution 2:**
+
+```ts
+const something = document.querySelector('#someId')! as HTMLInputElement;
+```
+
+- The TypeScript team provided the `as` alternative to not clash with React syntax, which also makes use of angle brackets.
+- Be consistent with which method you use for type casting!
+- Since you are forcing TypeScript to use the type you cast, it is up to you to ensure the type is correct. Otherwise, you may interact with it in unsupported ways.
+- Do not cast unless you are certain the expression is not `null`.
+
+Notice we also made use of the `!` mark. This lets TypeScript know the expression in front of it **never yield null**.
+
+```ts
+// We are not sure the expression is not null, so we do not use !, and we CANNOT type cast!
+const userInputElement = document.getElementById('user-input');
+if (userInputElement) {
+  (userInputElement as HTMLInputElement).value = 'Hi there!'; // If we reached this line of code, we have a non-null userInputElement value, so type casting is OK!
+}
+```
+
+### Index Properties
+
+### Function Overloads
+
+### Optional Chaining
+
+### Nullish Coalescing
+
+### Wrap Up
