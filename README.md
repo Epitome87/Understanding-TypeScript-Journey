@@ -1541,3 +1541,99 @@ interface AddFn {
 It's similar to how we would define a method in an interface, with the exception that we drop the function name. Essentially, we are defining an anonymous function. TypeScript understands this special syntax and realizes we want to use this interface as a function type.
 
 Using a custom type (like the original example) is probably a bit more common and shorter. But it's nice to be aware of this interface-based alternative.
+
+### Optional Parameters & Properties
+
+We can define define _optional_ properties in interfaces and classes using `?`:
+
+```ts
+interface Named {
+  readonly name?: string; // name is now optional
+}
+
+interface Greetable extends Named {
+  greet(phrase: string): void;
+}
+```
+
+- Note we do so by adding a `?` after the property name
+- Now the name property _may_ exist in classes that implement Named, but doesn't have to
+
+We can also now have a conditional in the constructor, allowing for a Person to be created without providing a name:
+
+```ts
+class Person implements Greetable {
+  name?: string; // name is now optional
+  age = 36;
+
+  constructor(n: string) {
+    if (n) {
+      this.name = n;
+    }
+  }
+}
+
+const user = new Person(); // No name argument required
+```
+
+We can also have _optional parameters_ in functions (including methods and constructors), done in one of two ways:
+
+1. Having a default fallback value (possible in JavaScript)
+2. Having a question mark after the parameter name (default value is undefined if no value set)
+
+```ts
+class Person implements Greetable {
+  name?: string;
+  age = 36;
+
+  // Method 1: Default fallback value:
+  constructor(n: string = 'Matthew') {
+    this.name = n;
+  }
+
+  // Method 2: Optional with ? syntax
+  constructor(n?: string) {
+    if (n) this.name = n;
+  }
+}
+```
+
+It's important to note that these three constructs are only loosely related. We _can_ have an optional property in an Interface _without_ defining that property as optional in the class that implements it, just make sure to adjust your logic so that the property gets initialized appropriately:
+
+```ts
+interface Named {
+  readonly name?: string; // name is optional
+}
+
+// Remember, Greetable extends Named
+class Person implements Greetable {
+  name: string; // name is NOT optional!
+  constructor(n: string) {
+    this.name = n; // Note we dropped our condition check so we ALWAYS set name
+  }
+}
+```
+
+You can also mark _methods as optional_:
+
+```ts
+const optionalMethod = () => myMethod?() {}
+```
+
+### Compiling Interfaces to JavaScript
+
+Remember, for TypeScript `class` code, JavaScript produces equivalent code (constructor functions if we are targeting ES5 code, class keyword if we are targeting ES6, etc).
+
+So -- under the hood, what does JavaScript produce / offer as an alternative to TypeScript interface?
+
+**Nothing!** There is no translation for Interfaces; JS does not know about this feature. Pure TypeScript, only available during development and compilation. At runtime, no trace will be left of the Interface in the code.
+
+### Wrap Up
+
+- Classes in TypeScript just build up on Classes for JavaScript
+- Interfaces only exist in TypeScript, help force classes / objects to have certain structures and help us clearly describe them
+  - Can be used as a function type
+  - Allow for optional properties / methods
+  - When being compiled, no new code is emitted
+  - Historically, custom types in TypeScript could not be used like interfaces...
+  - ...But now we _could_ replace an interface with custom types for objects, but not recommended
