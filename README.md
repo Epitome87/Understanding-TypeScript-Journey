@@ -1640,7 +1640,7 @@ So -- under the hood, what does JavaScript produce / offer as an alternative to 
 
 ## Section 6: Advanced Types
 
-##### `Originally Started: 4/22/2023, Completed: TBD`
+##### `Originally Started: 4/22/2023, Completed: 4/24/2023`
 
 ### Module Introduction
 
@@ -1895,10 +1895,262 @@ if (userInputElement) {
 
 ### Index Properties
 
+Also called **index signatures**, an **index property** allows us to create objects which are more flexible regarding the properties they might hold. The idea is to type objects of unknown structure when you only know the key and value types.
+
+For example, we want an object to store different error types (the keys) along with their error message (the value). We do not know what these keys/properties are ahead of time, but we do know we want the keys to be a string and the values to be a string. We could achieve this using index properties:
+
+```ts
+interface ErrorContainer {
+  id: string; // Pre-defined properties also okay, but must be of same type!
+  [prop: string]: string; // Index property; keys are strings and so are values
+}
+```
+
+We can now build up objects that fit the required shape of key/values:
+
+```ts
+const errorBag: ErrorContainer = {
+  email: 'Not a valid email!',
+  username: 'Must start with a capital character!',
+};
+```
+
+Take another example where we have employees with multiple means of yearly income. We want to determine the total they earn each year.
+
+```ts
+const salary1 = {
+  baseSalary: 100_000,
+  yearlyBonus: 20_000,
+};
+
+const salary2 = {
+  contractSalary: 110_000,
+};
+```
+
+```ts
+function totalSalary(salaryObject: ???) {
+  let total = 0;
+  for (const name in salaryObject) {
+    total += salaryObject[name];
+  }
+  return total;
+}
+```
+
+How would we annotate `salaryObject` parameter of the `totalSalary()` to accept objects with key as string and value as numbers?
+
+Using index signatures, of course:
+
+```ts
+function totalSalary(salaryObject: { [key: string]: number }) {
+  let total = 0;
+  for (const name in salaryObject) {
+    total += salaryObject[name];
+  }
+  return total;
+}
+
+console.log(totalSalary(salary1)); // => 120_000
+console.log(totalSalary(salary2)); // => 110_000
+```
+
+We can keep creating salary objects that conform to the shape specified in our index signatures, and the `totalSalary` method will continue to work:
+
+```ts
+const salary3 = {
+  baseSalary: 80_000,
+  stockOptions: 15_000,
+  performanceBonus: 5_000,
+};
+
+console.log(totalSalary(salary3)); // => 100_000
+```
+
+**Index Signature Syntax**
+
+```ts
+{ [key: KeyType]: ValueType }
+```
+
+- Key types must be a string, number, or symbol.
+- Value types can be of any type, including unions.
+- In the index signature, we could have used any identifier for the key, not just `prop`. Typically, `key` or `prop` are used.
+
+**Index Signature Caveats**
+
+Index signatures have a few caveats you should be aware of.
+
+1. Non-existing properties
+
+If we try to access a non-existing property of an object whose index signature is `{ [key: string]: string }`, what would happen?
+
+As expected, TypeScript infers the type of the value to string. But if you check the runtime value it's `undefined`:
+
+```ts
+interface StringByString {
+  [key: string]: string;
+}
+
+const object: StringByString = {};
+
+const value = object['nonExistingProp'];
+console.log(value); // => undefined
+```
+
+The index signature maps a key type to a value type -- that's all. If we don't make that mapping correct, the value type can deviate from the actual runtime data type.
+
+To make typing more accurate, we can mark the indexed value as `string` or `undefined`. Now TypeScript becomes aware the properties you access might not exist:
+
+```ts
+interface StringByString {
+  [key: string]: string | undefined;
+}
+```
+
+2. String and number keys
+
+```ts
+interface NumbersNames {
+  [key: string]: string;
+}
+
+const names: NumbersNames = {
+  '1': 'one',
+  '2': 'two',
+};
+```
+
+Accessing a value by a string key works as expected:
+
+```ts
+const value1 = names['1']; // Valid, naturally!
+```
+
+And accessing by a value also works:
+
+```ts
+const value2 = names[1]; // Also valid!
+```
+
+JavaScript implicitly coerces numbers to strings when used as keys in property accessors.
+
+Essentially, `[key: string]` is the same as `[key: string | number]`.
+
 ### Function Overloads
+
+If we need to define multiple function signatures for one function, we can make use of **function overloads**. This will allow multiple possible ways of calling a function (with different parameters and return types). They help when TypeScript cannot correctly infer the return type on its own based on the inputs.
+
+Recall we created an `add` function earlier that could take in two numbers or two strings. Depending on what the inputs were, we returned the addition of them. However, as far as TypeScript was concerned, the return value was `Combinable` (our custom type for `string | number`). What if we wanted to do a string operation on the value returned by `add`? TypeScript would forbid it, as that return value is potentially a number.
+
+We can make use of function overloads to make it clear what return type we want depending on the inputs:
+
+```ts
+type Combinable = string | number;
+
+function add(a: string, b: string): string;
+function add(a: number, b: number): number;
+function add(a: string, b: number): string;
+function add(a: number, b: string): string;
+function add(a: Combinable, b: Combinable) {
+  if (typeof a === 'string' || typeof b === 'string') {
+    return a.toString() + b.toString();
+  }
+  return a + b;
+}
+
+const result = add('Matthew', ' McGrath');
+const [first, last] = result.split(' '); // Now works without TS warning!
+```
+
+- The number of parameters should stay the same!
+- The last function should have the actual function implementation
 
 ### Optional Chaining
 
+Let's consider a scenario where we are working with objects, and we aren't always sure if certain properties will be found on that object. For example, we may be retrieving user information from a backend, where we expect an object in the following shape:
+
+```ts
+const fetchedUserData = {
+  id: 'user',
+  name: 'Matthew',
+  job: {
+    title: 'CEO', description: 'My own company' }
+  }
+};
+
+console.log(fetchedUserData.job.title);
+```
+
+But what if -- for some reason -- the `job` property was not found? We would get an error in the above `console.log` statement.
+
+In regular JavaScript we would do the following:
+
+```js
+console.log(fetchedUserData.job && fetchedUserData.job.title);
+```
+
+In TypeScript, we can make use of **optional chaining** operator to get around this:
+
+```ts
+console.log(fetchedUserData?.job?.title);
+```
+
+We simply put a `?` after a property that may not be defined.
+
 ### Nullish Coalescing
 
+Loosely related to optional chaining is **nullish coalescing**. If we want to ensure some default values are set when working with potentially null or undefined values, we would use **short-circuit evaluation** via the `||` operator in vanilla JavaScript:
+
+```js
+// Potentially null or undefined return value
+const userData = fetchFromBackend();
+
+// JavaScript way:
+const storedData = userData || 'Default';
+```
+
+The problem with the typical JavaScript way using `||` is any falsy value will cause the default value to be used. This includes an empty string, 0, etc. We may not want this to be the case.
+
+TypeScript provides us with a more precise way of targetting specifically `null` and `undefined` values:
+
+```ts
+const storedData = userInput ?? 'Default';
+```
+
+The `??` operator is called the **nullish coalescing operator**. It means if the expression on the left is null or undefined we use the value to the right of `??`, otherwise we use the expression on the left.
+
 ### Wrap Up
+
+In this section, we learned quite a few small features TypeScript provides to improve the quality of our code and typings.
+
+1. Intersection types
+   - Combines multiple types into one
+   - In objects, this means the combination of all unique properties
+   - In union types, the result of the intersection is the type that the **unions have in common**
+2. Type guards
+   - Checking if a certain property/method exists before trying to use it, or if we can do something with the type before we try to use it.
+   - `'propertyName' in objectName`, `typeof`, and `instanceof` are all useful ways to create type guards.
+3. Discriminated unions
+   - Pattern used with union types that makes implementing type guards easier
+   - Available when working with union types and object types (including classes / interfaces)
+   - Essentially adding a `type` property, and using that to check what type we are working with
+4. Type casting
+   - Allows us to convert a variable from one type to another
+   - Put the desired type in brackets in front of what we are trying to cast
+   - Alternatively (and more recommended), use `as <desiredType>` after the expression we wish to cast
+5. Index properties
+   - Allow us to type objects of unknown structure when we only know the key and value types
+   - Done with `{ [key: <keyType>] : <valueType> }`, for example: `{ [key: string]: number }`
+6. Function overloads
+   - Multiple functions with same name but different parameter types and return type
+   - Number of parameters should be the same
+   - Simply define the _signature_ (not the declaration) of each variation of the function before the actual function declaration
+7. Optional chaining
+   - Useful to avoid errors when checking properties on potentially undefined values
+   - Done using the `?` operator
+   - Example: `console.log(userData?.jobInfo?.title)`
+8. Nullish coalescing
+   - Helpful when working with truly `null` and `undefined` values
+   - Done using the `??` operator
+   - Example: `const val = possiblyUndefinedOrNullValue ?? 'Default Value';`
